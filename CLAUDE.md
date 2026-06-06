@@ -235,7 +235,7 @@ Tag-based, npm OIDC Trusted Publishing (zero `NPM_TOKEN`).
    git push && git push origin vX.Y.Z
    ```
 5. Le workflow `release.yml` tourne sur le tag :
-   - `build` — install, typecheck, test, build (Node 22)
+   - `build` — install, typecheck, test, build (Node 24)
    - `publish` — `npm publish --access public --provenance` via OIDC Trusted
      Publishing. **Node 24 OBLIGATOIRE** (npm OIDC requiert npm >= 11.5 ; Node 22
      ships npm 10.x et echoue en 404). Aucun `NPM_TOKEN` ; configurer un trusted

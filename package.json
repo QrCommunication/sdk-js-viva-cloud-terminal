@@ -1,6 +1,6 @@
 {
   "name": "@qrcommunication/viva-cloud-terminal-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TypeScript SDK for the Viva Wallet Cloud Terminal API (merchant /ecr/v1/) — drive a physical EFT POS terminal: sale, pre-auth capture, refunds, sessions and polling. OAuth2 client_credentials.",
   "keywords": [
     "viva",

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2026-06-06
+
+### Changed (CI)
+
+- Align the `release.yml` **build** job and `tests.yml` standalone job to **Node 24**
+  (consistency with the `publish` job — npm OIDC Trusted Publishing requires npm 11.5+ / Node 24).
+  No runtime/API changes.
+
 ## [1.0.0] - 2026-06-06
 
 ### Added — Initial release
