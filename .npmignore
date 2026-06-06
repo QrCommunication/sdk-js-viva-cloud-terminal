@@ -1,0 +1,16 @@
+src/
+tests/
+docs/
+.github/
+node_modules/
+coverage/
+*.test.ts
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+.eslintrc*
+.prettierrc*
+eslint.config.*
+CLAUDE.md
+AGENTS.md
+llms.txt

@@ -1,0 +1,146 @@
+# =============================================================================
+# Viva Cloud Terminal SDK (JS/TS) - Release Workflow
+# =============================================================================
+# Triggered by pushing a tag v* (e.g. v1.0.0).
+# Runs tests, publishes to npm via OIDC Trusted Publishing, and creates a
+# GitHub Release with notes extracted from CHANGELOG.md.
+#
+# npm OIDC Trusted Publishing requires npm >= 11.5, which ships with Node 24+.
+# Node 22 ships npm 10.x and will NOT perform the OIDC handshake (404 on PUT).
+# Keep node-version at 24 in the publish job. No NPM_TOKEN secret is used.
+#
+# Prerequisite on npmjs.com:
+#   - Configure a "Trusted Publisher" on the package
+#     Settings -> Publishing -> Add trusted publisher
+#       Publisher:     GitHub Actions
+#       Organization:  QrCommunication
+#       Repository:    sdk-js-viva-cloud-terminal
+#       Workflow:      release.yml
+#       Environment:   (leave blank)
+#   - No NPM_TOKEN secret needed.
+# =============================================================================
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job: Build and test before publishing
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  # ---------------------------------------------------------------------------
+  # Job: Publish to npm with OIDC Trusted Publishing
+  # ---------------------------------------------------------------------------
+  # No NPM_TOKEN needed - relies on the trusted publisher configured on npmjs.
+  # Provenance is generated automatically (requires id-token: write).
+  # Node 24 is REQUIRED: npm OIDC trusted publishing needs npm >= 11.5.
+  # ---------------------------------------------------------------------------
+  publish:
+    name: Publish to npm
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Publish to npm
+        run: npm publish --access public --provenance
+
+  # ---------------------------------------------------------------------------
+  # Job: Create the GitHub Release
+  # ---------------------------------------------------------------------------
+  github-release:
+    name: Create GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: version
+        env:
+          GH_REF: ${{ github.ref }}
+        run: |
+          VERSION="${GH_REF#refs/tags/v}"
+          TAG="${GH_REF#refs/tags/}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Extract release notes from CHANGELOG
+        id: changelog
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          NOTES=$(awk "/^## \[$RELEASE_VERSION\]/{flag=1; next} /^## \[/{flag=0} flag" CHANGELOG.md)
+          if [ -z "$NOTES" ]; then
+            NOTES="Release $RELEASE_VERSION"
+          fi
+          echo "$NOTES" > release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Viva Cloud Terminal SDK JS v${{ steps.version.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.tag, '-') }}
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

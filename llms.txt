@@ -1,0 +1,38 @@
+# @qrcommunication/viva-cloud-terminal-sdk
+
+> TypeScript SDK for the Viva Wallet Cloud Terminal API (merchant `/ecr/v1/` variant). Drive a physical EFT POS terminal from an ECR / cash register / back-office: sale, pre-auth capture, refunds (referenced, unreferenced, fast), rebate, device actions, session retrieval/abort, and outcome polling. Isomorphic (Node 18+, browser, Deno, edge, React Native), zero runtime dependencies (native `fetch`).
+
+Viva Wallet (https://www.viva.com) is a European payments platform. This SDK wraps the merchant Cloud Terminal REST API (`https://api.vivapayments.com/ecr/v1/`, demo hosts in sandbox) with a typed, well-tested client. It is the TypeScript port of the PHP SDK `qrcommunication/viva-cloud-terminal-sdk`.
+
+Key facts for AI agents:
+
+- **Package**: `@qrcommunication/viva-cloud-terminal-sdk` on npm.
+- **Entry point**: `.` for the client, resources, enums, errors and types.
+- **Authentication**: OAuth2 `client_credentials` → Bearer token. Token endpoint `accounts.vivapayments.com/connect/token` (Basic auth), API calls `api.vivapayments.com/ecr/v1/...` (Bearer). Token cached + auto-refreshed by the SDK.
+- **Amounts** are always in **cents** (number); `currencyCode` is the ISO 4217 numeric code as a string (`"978"` = EUR).
+- **camelCase** on every payload.
+- **Empty success bodies**: most `transactions:*` endpoints reply HTTP 200 with no body — the outcome is obtained by polling the session (`pollUntilComplete`). Each `transactions.*` method returns `{ sessionId, response }`.
+- **Scope**: merchant `/ecr/v1/` only. The ISV `/ecr/isv/v1/` variant is a different SDK.
+
+## Docs
+
+- [README.md](README.md): Install, quickstart, auth, resource reference, examples, error handling, event ids, test card.
+- [CLAUDE.md](CLAUDE.md): Instructions for AI coding agents (Claude, Cursor, Copilot, Codex). Architecture, patterns, gotchas, release workflow.
+- [CHANGELOG.md](CHANGELOG.md): Per-version changelog.
+
+## Source map
+
+- [src/client.ts](src/client.ts): `VivaCloudTerminalClient` — entry point + `pollUntilComplete` shortcut.
+- [src/config.ts](src/config.ts): `CloudTerminalConfig` + `VivaCloudTerminalOptions` — credentials, environment, hosts, timeout, fetch.
+- [src/http.ts](src/http.ts): `HttpClient` — `fetch`-based HTTP, OAuth token caching, typed error mapping.
+- [src/errors.ts](src/errors.ts): `VivaError` → `ApiError`, `AuthenticationError`.
+- [src/enums.ts](src/enums.ts): `Environment`, `EcrEventId` (`as const`) + helpers (`ecrEventIdFrom`, `isInProgress`, `isTerminalEvent`, `isSuccessfulEvent`, `ecrEventLabel`).
+- [src/resources/](src/resources/): one file per resource (devices, transactions, sessions).
+- [src/types/](src/types/): parameter and response interfaces.
+- [src/uuid.ts](src/uuid.ts): `generateUuid()` (RFC 4122 v4) for session ids.
+- [tests/](tests/): Vitest suite — `tests/support/mock-fetch.ts` provides an injectable `fetch` mock (`mockFetch`, `tokenResponse`).
+
+## Related
+
+- PHP SDK: `qrcommunication/viva-cloud-terminal-sdk` on Packagist.
+- Viva Cloud Terminal API docs: https://developer.viva.com/apis-for-point-of-sale/cloud-terminal-api/
