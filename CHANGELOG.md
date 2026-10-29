@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.2] - 2026-10-29
+
+### Changed (dev tooling)
+
+- `vitest` / `@vitest/coverage-v8` 3.2 → 5.0, `tsup` 8.5 → 9.0, `eslint` 10.13,
+  `typescript-eslint` 8.72; transitive refresh. Closes the dev-only advisories
+  (tinypool, vite, postcss, nanoid, brace-expansion): `pnpm audit` 28 → 0.
+- `typescript` stays on 6.0: TypeScript 7 ships no compiler API, which tsup's
+  declaration build (rollup-plugin-dts) requires.
+- No runtime dependency, no API change.
+
 ## [1.0.1] - 2026-06-06
 
 ### Changed (CI)
